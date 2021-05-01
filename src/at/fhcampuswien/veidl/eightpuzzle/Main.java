@@ -14,33 +14,38 @@ public class Main {
 
     private static boolean FINISHED = false;
 
-    private static int[][] ez = {{1, 2, 3},
+    private static int[][] ez = {
+            {1, 2, 3},
             {4, 5, 6},
             {7, 8, 0}};
 
-    private static int[][] goalState = {{4, 5, 6}, {1, 2, 3}, {7, 8, 0}};
+    private static int[][] goalState = {
+            {4, 5, 6},
+            {1, 2, 3},
+            {7, 8, 0}};
 
     public static void main(String[] args) {
-        // write your code here
 
-        queue.add(new State(ez, 0, 0));
-
+        int initH = calculateHeuristic(ez);
         int g = 0;
 
+        State initState = new State(ez, g, initH);
+
+//        g++;
+//        State bestMove = move(initState, g);
         while (!FINISHED) {
-            move(queue.peek(), g);
             g++;
+            initState = move(initState, g);
 
-            if (g > 10)
+            if (g == 20)
                 FINISHED = true;
-
-            queue.forEach(state -> System.out.println(state.toString()));
+//            queue.forEach(state -> System.out.println(state.toString()));
 
         }
     }
 
 
-    private static void move(State state, int g) {
+    private static State move(State state, int g) {
         int[][] grid = state.grid;
 
         for (int i = 0; i < grid.length; i++) {
@@ -48,100 +53,36 @@ public class Main {
                 if (grid[i][j] == 0) {
                     int x = i;
                     int y = j;
-
-                    State left = moveLeft(grid, x, y, g);
-//                    State right = moveRight(grid, x, y, g);
-//                    State up = moveUp(grid, x, y, g);
-//                    State down = moveDown(grid, x, y, g);
-
-
-                    addToQueue(left);
-//                    addToQueue(right);
-//                    addToQueue(up);
-//                    addToQueue(down);
-
                     //find tiles which can move to x y --> 8,6
                     //move one calcHeuristic --> then decide which move is better --> return state with lower f
-
-
                 }
             }
         }
+
+        return queue.peek(); //The best move in this graph depth
     }
 
     private static void addToQueue(State state) {
         if (state != null) {
+            printState(state.grid);
             queue.add(state);
         }
     }
 
-    private static State moveLeft(int[][] grid, int x, int y, int g) {
-        //check outOfBound
-        if (!checkOutOfBounds(grid, x, y)) {
-            return null;
+
+    private static void printState(int[][] currGrid) {
+        for (int i = 0; i < currGrid.length; i++) {
+            for (int j = 0; j < currGrid.length; j++) {
+                System.out.print(currGrid[i][j] + " ");
+            }
+            System.out.println();
         }
-//        System.out.println();
-        // swapped left
-        grid[x][y] = grid[x - 1][y];
-        grid[x - 1][y] = 0;
-
-        return new State(grid, calculateHeuristic(grid), g);
+        System.out.println();
     }
 
-    private static State moveRight(int[][] grid, int x, int y, int g) {
-        //check outOfBound
-        if (checkOutOfBounds(grid, x, y)) {
-            return null;
-        }
 
-        // swapped left
-        grid[x][y] = grid[x + 1][y];
-        grid[x + 1][y] = 0;
-
-        return new State(grid, calculateHeuristic(grid), g);
-    }
-
-    private static State moveUp(int[][] grid, int x, int y, int g) {
-        //check outOfBound
-        if (checkOutOfBounds(grid, x, y)) {
-            return null;
-        }
-
-        // swapped left
-        grid[x][y] = grid[x][y + 1];
-        grid[x][y + 1] = 0;
-
-        return new State(grid, calculateHeuristic(grid), g);
-    }
-
-    private static State moveDown(int[][] grid, int x, int y, int g) {
-        //check outOfBound
-        if (checkOutOfBounds(grid, x, y)) {
-            return null;
-        }
-
-        // swapped left
-        grid[x][y] = grid[x][y - 1];
-        grid[x][y - 1] = 0;
-
-        return new State(grid, calculateHeuristic(grid), g);
-    }
-
-    private static boolean checkOutOfBounds(int[][] grid, int x, int y) {
-        return (x + 1 < grid.length - 1 || y + 1 < grid.length - 1 || x - 1 > 0 || y - 1 > 0);
-    }
-
-    /**
-     * misplaced tiles
-     *
-     * @param
-     * @return
-     */
     private static int calculateHeuristic(int[][] grid) {
-
-        // current position
         int misplaced = 0;
-        // check every tile for mismatch with goalState
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid.length; j++) {
                 if (grid[i][j] != goalState[i][j]) {
@@ -149,13 +90,12 @@ public class Main {
                 }
             }
         }
-
         return misplaced;
     }
 
 
-    // grid + g + h
     private static class State {
+
         private int[][] grid;
         private int g;
         private int h;
@@ -202,6 +142,8 @@ public class Main {
                     ", h=" + h +
                     '}';
         }
+
     }
+
 
 }
