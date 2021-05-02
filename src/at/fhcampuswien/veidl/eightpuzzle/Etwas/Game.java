@@ -36,24 +36,26 @@ public class Game {
     }
 
     public void run() {
+        //Change rand puzzle -> to peek of queue
+        //clear queue
+        //move stuff and fill queue
+        //increase g
+        int g = 0;
         if (isSolvable()) {
-            int[] emptyCor = getEmptySpaceCor(startingNode);
-            int g = 0;
+            while (g < 3) { //find finishing condition
+                int[] emptyCor = getEmptySpaceCor(startingNode);
+                //g = 1
+                moveLeft(startingNode, emptyCor[0], emptyCor[1], g);
+                moveRight(startingNode, emptyCor[0], emptyCor[1], g);
+                moveTop(startingNode, emptyCor[0], emptyCor[1], g);
+                moveBottom(startingNode, emptyCor[0], emptyCor[1], g);
 
-            moveLeft(startingNode, emptyCor[0], emptyCor[1], g);
-            resetEnv();
-
-            moveRight(startingNode, emptyCor[0], emptyCor[1], g);
-            resetEnv();
-
-            moveTop(startingNode, emptyCor[0], emptyCor[1], g);
-            resetEnv();
-
-            moveBottom(startingNode, emptyCor[0], emptyCor[1], g);
-            resetEnv();
-
-            System.out.println("p");
-            printNode(this.queue.peek().getNodeGrid());
+                System.out.println("p");
+                printNode(this.queue.peek().getNodeGrid());
+                startingNode = this.queue.peek();
+                this.queue.clear();
+                g++;
+            }
         }
 
     }
@@ -64,7 +66,7 @@ public class Game {
 
         for (int i = 0; i < invList.size(); i++) {
             for (int j = 0; j < invList.size(); j++) {
-                if (invList.get(i) > invList.get(j))
+                if (invList.get(i) > 0 && invList.get(j) > 0 && invList.get(i) > invList.get(j))
                     inversionCounter++;
             }
         }
@@ -79,6 +81,16 @@ public class Game {
             }
         }
         return invList;
+    }
+
+    private int[][] copyGrid(int[][] grid) {
+        int[][] newGrid = new int[grid.length][grid.length];
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid.length; j++) {
+                newGrid[i][j] = grid[i][j];
+            }
+        }
+        return newGrid;
     }
 
     public void resetEnv() { //Dumme scheiß methode
@@ -117,7 +129,7 @@ public class Game {
     }
 
     private void moveLeft(Node startingNode, int x, int y, int g) {
-        int[][] grid = startingNode.getNodeGrid();
+        int[][] grid = copyGrid(startingNode.getNodeGrid());
         if (x - 1 < 0)
             return;
 
@@ -131,7 +143,7 @@ public class Game {
     }
 
     private void moveRight(Node startingNode, int x, int y, int g) {
-        int[][] grid = startingNode.getNodeGrid();
+        int[][] grid = copyGrid(startingNode.getNodeGrid());
 
         if (x + 1 > 2)
             return;
@@ -147,7 +159,7 @@ public class Game {
     }
 
     private void moveTop(Node startingNode, int x, int y, int g) {
-        int[][] grid = startingNode.getNodeGrid();
+        int[][] grid = copyGrid(startingNode.getNodeGrid());
         if (y - 1 < 0)
             return;
 
@@ -161,7 +173,7 @@ public class Game {
     }
 
     private void moveBottom(Node startingNode, int x, int y, int g) {
-        int[][] grid = startingNode.getNodeGrid();
+        int[][] grid = copyGrid(startingNode.getNodeGrid());
         if (y + 1 > 2)
             return;
 
