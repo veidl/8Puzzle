@@ -93,22 +93,6 @@ public class Game {
         return newGrid;
     }
 
-    public void resetEnv() { //Dumme scheiß methode
-        this.randomPuzzle = new int[][]{
-                {1, 2, 3},
-                {0, 4, 6},
-                {7, 5, 8}};
-//        this.randomPuzzle = new int[][]{
-//                {1, 2, 3},
-//                {4, 0, 6},
-//                {7, 5, 8}};
-//        this.randomPuzzle = new int[][]{
-//                {1, 2, 3},
-//                {4, 5, 6},
-//                {7, 0, 8}};
-        this.startingNode = new Node(this.randomPuzzle, 0, calcMisplacedHeuristic(this.randomPuzzle));
-    }
-
     public void addToQueue(Node node) {
         if (node != null)
             this.queue.add(node);
