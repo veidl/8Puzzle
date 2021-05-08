@@ -6,11 +6,15 @@ public class Main {
     private static final PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparing(State::getF));
     private static final ArrayList<State> visitedNodes = new ArrayList<>();
 
-    //    private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
+//        private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
 //    private static final int[][] goalState = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
 
-        private static final int[][] initialState = {{1, 2, 3}, {8, 0, 4}, {7, 6, 5}};
-        private static final int[][] goalState = {{2, 8, 1}, {4, 6, 3}, {0, 7, 5}};
+//    private static final int[][] initialState = {{1, 2, 3}, {8, 0, 4}, {7, 6, 5}};
+//    private static final int[][] goalState = {{2, 8, 1}, {4, 6, 3}, {0, 7, 5}};
+
+
+    private static final int[][] initialState = {{8, 6, 7}, {2, 5, 4}, {3, 0, 1}};
+    private static final int[][] goalState = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
 
     public static void main(String[] args) {
         if (!isSolvable(initialState)) {
@@ -19,12 +23,17 @@ public class Main {
         queue.add(new State(initialState, 0, 0));
 
         System.out.println("Search with Manhatten Distance");
-        search(0, 50000);
+        search(0, 10000);
 
         queue.clear();
         queue.add(new State(initialState, 0, 0));
         System.out.println("Search with Misplaced Tiles");
-        search(1, 500000);
+        search(1, 10000);
+
+        queue.clear();
+        queue.add(new State(initialState, 0, 0));
+        System.out.println("Search with Weighted Heuristic");
+        search(2, 30000);
     }
 
     private static void search(int searchAlgorithm, int maxIteration) {
@@ -98,7 +107,7 @@ public class Main {
             int top = workingGrid[x - 1][y];
             workingGrid[x - 1][y] = workingGrid[x][y];
             workingGrid[x][y] = top;
-            toReturn.add(new State(workingGrid, currentState.g + 1, searchAlgorithm == 0 ? calcManhattanHeuristic(workingGrid) : calculateMisplacedHeuristic(workingGrid)));
+            toReturn.add(new State(workingGrid, currentState.g + 1, heuristic(searchAlgorithm, workingGrid)));
         }
         // down
         if (x + 1 <= grid.length - 1) {
@@ -106,7 +115,8 @@ public class Main {
             int down = workingGrid[x + 1][y];
             workingGrid[x + 1][y] = workingGrid[x][y];
             workingGrid[x][y] = down;
-            toReturn.add(new State(workingGrid, currentState.g + 1, searchAlgorithm == 0 ? calcManhattanHeuristic(workingGrid) : calculateMisplacedHeuristic(workingGrid)));
+
+            toReturn.add(new State(workingGrid, currentState.g + 1, heuristic(searchAlgorithm, workingGrid)));
         }
         // left
         if (y - 1 >= 0) {
@@ -114,7 +124,8 @@ public class Main {
             int left = workingGrid[x][y - 1];
             workingGrid[x][y - 1] = workingGrid[x][y];
             workingGrid[x][y] = left;
-            toReturn.add(new State(workingGrid, currentState.g + 1, searchAlgorithm == 0 ? calcManhattanHeuristic(workingGrid) : calculateMisplacedHeuristic(workingGrid)));
+
+            toReturn.add(new State(workingGrid, currentState.g + 1, heuristic(searchAlgorithm, workingGrid)));
         }
         // right
         if (y + 1 <= grid.length - 1) {
@@ -122,10 +133,24 @@ public class Main {
             int right = workingGrid[x][y + 1];
             workingGrid[x][y + 1] = workingGrid[x][y];
             workingGrid[x][y] = right;
-            toReturn.add(new State(workingGrid, currentState.g + 1, searchAlgorithm == 0 ? calcManhattanHeuristic(workingGrid) : calculateMisplacedHeuristic(workingGrid)));
+            toReturn.add(new State(workingGrid, currentState.g + 1, heuristic(searchAlgorithm, workingGrid)));
         }
 
         return toReturn;
+    }
+
+    private static int heuristic(int searchAlgorithm, int[][] workingGrid) {
+        int h = 0;
+
+        if (searchAlgorithm == 0) {
+            h = calculateMisplacedHeuristic(workingGrid);
+        } else if (searchAlgorithm == 1) {
+            h = calculateMisplacedHeuristic(workingGrid);
+        } else {
+            h = (int) (calcManhattanHeuristic(workingGrid) * 0.97 + calculateMisplacedHeuristic(workingGrid) * 0.03);
+        }
+
+        return h;
     }
 
     private static int[][] copyGrid(int[][] grid) {
