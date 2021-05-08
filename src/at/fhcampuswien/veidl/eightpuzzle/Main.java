@@ -1,165 +1,142 @@
 package at.fhcampuswien.veidl.eightpuzzle;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.PriorityQueue;
+import java.util.*;
 
 public class Main {
+    private static final PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparing(State::getF));
+    private static final ArrayList<State> visitedNodes = new ArrayList<>();
 
+    //    private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
+//    private static final int[][] goalState = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
 
-    // sorted by F(n)
-    private static PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparing(State::getF));
-    private static ArrayList<State> visitedNodes = new ArrayList<>();
-
-    private static boolean FINISHED = false;
-
-//    private static int[][] ez = {
-//            {1, 2, 3},
-//            {4, 0, 6},
-//            {7, 5, 8}};
-//
-//    private static int[][] goalState = {
-//            {1, 2, 3},
-//            {0, 4, 6},
-//            {7, 5, 8}};
-
-    private static int[][] ez = {
-            {1, 2, 3},
-            {0, 4, 6},
-            {7, 5, 8}};
-
-    private static int[][] goalState = {
-            {1, 2, 3},
-            {4, 5, 6},
-            {7, 8, 0}};
-
+        private static final int[][] initialState = {{1, 2, 3}, {8, 0, 4}, {7, 6, 5}};
+        private static final int[][] goalState = {{2, 8, 1}, {4, 6, 3}, {0, 7, 5}};
 
     public static void main(String[] args) {
-
-        int initH = calculateHeuristic(ez);
-        int g = 0;
-
-        State initState = new State(ez, g, initH);
-//        State best = move(initState, g);
-//        printState(best.grid);
-        while (!FINISHED) {
-            g++;
-            State best = move(initState, g);
-            if (g == 1) {
-//                printState(best.grid);
-                FINISHED = true;
-            }
+        if (!isSolvable(initialState)) {
+            throw new IllegalArgumentException("Not solvable");
         }
+        queue.add(new State(initialState, 0, 0));
+
+        System.out.println("Search with Manhatten Distance");
+        search(0, 50000);
+
+        queue.clear();
+        queue.add(new State(initialState, 0, 0));
+        System.out.println("Search with Misplaced Tiles");
+        search(1, 500000);
     }
 
+    private static void search(int searchAlgorithm, int maxIteration) {
+        int iteration = 0;
+        int nodesGenerated = 0;
+        visitedNodes.clear();
 
-    private static State move(State state, int g) {
-        int[][] grid = state.grid;
-        for (int y = 0; y < grid.length; y++) {
-            for (int x = 0; x < grid.length; x++) {
-                if (grid[y][x] == 0) {
-
-                    //Save current state somewhere after moving the xero
-                    State left = moveLeft(grid, x, y, g);
-                    printState(grid);
-                    addToQueue(left);
-
-                    State right = moveRight(grid, x, y, g);
-                    printState(grid);
-                    addToQueue(right);
-
-                    State bottom = moveBottom(grid, x, y, g);
-                    printState(grid);
-                    addToQueue(bottom);
-
-                    State top = moveTop(grid, x, y, g);
-                    printState(grid);
-                    addToQueue(top);
-                    break;
-//                    queue.forEach(state1 -> System.out.println(state));
-
-
+        long startTime = System.nanoTime();
+        while (iteration <= maxIteration) {
+            ArrayList<State> childNodes;
+            State topOfNodes = queue.poll();
+//            System.out.println("getting topNode: with G=" + topOfNodes.g + " H=" + topOfNodes.h + " F=" + topOfNodes.getF());
+//            printNode(topOfNodes);
+            visitedNodes.add(topOfNodes);
+            if (Arrays.deepEquals(topOfNodes.grid, goalState)) {
+                System.out.println("Execution took: " + (System.nanoTime() - startTime) / 1000000 + "ms");
+                System.out.println("Visited Notes: " + (visitedNodes.size() - 1));
+                System.out.println("Nodes Generated: " + (nodesGenerated));
+                System.out.println("Branching Factor: " + ((((double) nodesGenerated) / (double) (visitedNodes.size() - 1))));
+                System.out.println("Puzzle solved in " + topOfNodes.g + " steps");
+                printNode(topOfNodes);
+                break;
+            } else {
+                childNodes = childNodes(topOfNodes, searchAlgorithm);
+                for (State child : childNodes) {
+                    if (!containsinChild(child)) {
+                        nodesGenerated++;
+                        queue.add(child);
+                    }
                 }
             }
-        }
-        return queue.peek(); //return the best move in this q
-    }
-
-
-    private static State moveLeft(int[][] grid, int x, int y, int g) {
-        if (x - 1 < 0)
-            return null;
-
-        int left = grid[y][x - 1];
-        grid[y][x - 1] = grid[y][x];
-        grid[y][x] = left;
-
-        return new State(grid, g, calculateHeuristic(grid));
-    }
-
-    private static State moveRight(int[][] grid, int x, int y, int g) {
-        if (x + 1 > 2)
-            return null;
-
-        int right = grid[y][x + 1];
-        grid[y][x + 1] = grid[y][x];
-        grid[y][x] = right;
-
-//        System.out.println(calculateHeuristic(grid));
-        return new State(grid, g, calculateHeuristic(grid));
-    }
-
-    private static State moveTop(int[][] grid, int x, int y, int g) {
-        if (y - 1 < 0)
-            return null;
-
-        int top = grid[y - 1][x];
-        grid[y - 1][x] = grid[y][x];
-        grid[y][x] = top;
-
-        return new State(grid, g, calculateHeuristic(grid));
-    }
-
-    private static State moveBottom(int[][] grid, int x, int y, int g) {
-        if (y + 1 > 2)
-            return null;
-
-        int bottom = grid[y + 1][x];
-        grid[y + 1][x] = grid[y][x];
-        grid[y][x] = bottom;
-
-        return new State(grid, g, calculateHeuristic(grid));
-    }
-
-
-    private static boolean isOutOfBound(int x, int y) {
-        if (x - 1 < 0 || x + 1 > 2 || y + 1 > 2 || y - 1 < 0) {
-            return true;
-        }
-        return false;
-    }
-
-    private static void addToQueue(State state) {
-        if (state != null) {
-//            printState(state.grid);
-            queue.add(state);
+            iteration++;
         }
     }
 
-
-    private static void printState(int[][] currGrid) {
-        for (int i = 0; i < currGrid.length; i++) {
-            for (int j = 0; j < currGrid.length; j++) {
-                System.out.print(currGrid[i][j] + " ");
+    private static void printNode(State state) {
+        for (int i = 0; i < state.grid.length; i++) {
+            for (int j = 0; j < state.grid.length; j++) {
+                System.out.print(state.grid[i][j] + " ");
             }
             System.out.println();
         }
         System.out.println();
     }
 
+    private static boolean containsinChild(State parent) {
+        int[][] childGrid = parent.grid;
+        for (State child : visitedNodes) {
+            if (Arrays.deepEquals(child.grid, childGrid))
+                return true;
+        }
+        return false;
+    }
 
-    private static int calculateHeuristic(int[][] grid) {
+    private static ArrayList<State> childNodes(State currentState, int searchAlgorithm) {
+        ArrayList<State> toReturn = new ArrayList<>();
+        int[][] grid = currentState.grid;
+        int x = -1;
+        int y = -1;
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid.length; j++) {
+                if (grid[i][j] == 0) {
+                    x = i;
+                    y = j;
+                }
+            }
+        }
+        // up
+        if (x - 1 >= 0) {
+            int[][] workingGrid = copyGrid(currentState.getGrid());
+            int top = workingGrid[x - 1][y];
+            workingGrid[x - 1][y] = workingGrid[x][y];
+            workingGrid[x][y] = top;
+            toReturn.add(new State(workingGrid, currentState.g + 1, searchAlgorithm == 0 ? calcManhattanHeuristic(workingGrid) : calculateMisplacedHeuristic(workingGrid)));
+        }
+        // down
+        if (x + 1 <= grid.length - 1) {
+            int[][] workingGrid = copyGrid(currentState.getGrid());
+            int down = workingGrid[x + 1][y];
+            workingGrid[x + 1][y] = workingGrid[x][y];
+            workingGrid[x][y] = down;
+            toReturn.add(new State(workingGrid, currentState.g + 1, searchAlgorithm == 0 ? calcManhattanHeuristic(workingGrid) : calculateMisplacedHeuristic(workingGrid)));
+        }
+        // left
+        if (y - 1 >= 0) {
+            int[][] workingGrid = copyGrid(currentState.getGrid());
+            int left = workingGrid[x][y - 1];
+            workingGrid[x][y - 1] = workingGrid[x][y];
+            workingGrid[x][y] = left;
+            toReturn.add(new State(workingGrid, currentState.g + 1, searchAlgorithm == 0 ? calcManhattanHeuristic(workingGrid) : calculateMisplacedHeuristic(workingGrid)));
+        }
+        // right
+        if (y + 1 <= grid.length - 1) {
+            int[][] workingGrid = copyGrid(currentState.getGrid());
+            int right = workingGrid[x][y + 1];
+            workingGrid[x][y + 1] = workingGrid[x][y];
+            workingGrid[x][y] = right;
+            toReturn.add(new State(workingGrid, currentState.g + 1, searchAlgorithm == 0 ? calcManhattanHeuristic(workingGrid) : calculateMisplacedHeuristic(workingGrid)));
+        }
+
+        return toReturn;
+    }
+
+    private static int[][] copyGrid(int[][] grid) {
+        int[][] newGrid = new int[grid.length][grid.length];
+        for (int i = 0; i < grid.length; i++) {
+            System.arraycopy(grid[i], 0, newGrid[i], 0, grid.length);
+        }
+        return newGrid;
+    }
+
+    private static int calculateMisplacedHeuristic(int[][] grid) {
         int misplaced = 0;
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid.length; j++) {
@@ -171,9 +148,43 @@ public class Main {
         return misplaced;
     }
 
+    private static int calcManhattanHeuristic(int[][] nodeGrid) {
+        int h = 0;
+        for (int i = 0; i < nodeGrid.length; i++) {
+            for (int j = 0; j < nodeGrid.length; j++) {
+                int target = nodeGrid[i][j];
+                for (int k = 0; k < nodeGrid.length; k++) {
+                    for (int l = 0; l < nodeGrid.length; l++) {
+                        if (goalState[k][l] == target) {
+                            h += Math.abs(k - i) + Math.abs(l - j);
+                        }
+                    }
+                }
+            }
+        }
+        return h;
+    }
+
+    private static boolean isSolvable(int[][] grid) {
+        int inversionCounter = 0;
+        List<Integer> invList = new ArrayList<>();
+
+        for (int i = 0; i < initialState.length; i++) {
+            for (int j = 0; j < initialState.length; j++) {
+                invList.add(grid[i][j]);
+            }
+        }
+        for (int i = 0; i < invList.size(); i++) {
+            for (Integer integer : invList) {
+                if (invList.get(i) > 0 && integer > 0 && invList.get(i) > integer) {
+                    inversionCounter++;
+                }
+            }
+        }
+        return inversionCounter % 2 == 0;
+    }
 
     private static class State {
-
         private int[][] grid;
         private int g;
         private int h;
@@ -191,37 +202,5 @@ public class Main {
         public int[][] getGrid() {
             return grid;
         }
-
-        public void setGrid(int[][] grid) {
-            this.grid = grid;
-        }
-
-        public int getG() {
-            return g;
-        }
-
-        public void setG(int g) {
-            this.g = g;
-        }
-
-        public int getH() {
-            return h;
-        }
-
-        public void setH(int h) {
-            this.h = h;
-        }
-
-        @Override
-        public String toString() {
-            return "State{" +
-                    "grid=" + Arrays.toString(grid) +
-                    ", g=" + g +
-                    ", h=" + h +
-                    '}';
-        }
-
     }
-
-
 }
