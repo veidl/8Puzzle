@@ -6,26 +6,6 @@ public class Main {
     private static final PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparing(State::getF));
     private static final ArrayList<State> visitedNodes = new ArrayList<>();
 
-//    3 Moves
-//    private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
-//    private static final int[][] goalState = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
-
-//    12 Moves
-//    private static final int[][] initialState = {{1, 2, 3}, {8, 0, 4}, {7, 6, 5}};
-//    private static final int[][] goalState = {{2, 8, 1}, {4, 6, 3}, {0, 7, 5}};
-
-//    14 Moves
-//    private static final int[][] initialState = {{2,3,1}, {7,0,8}, {6,5,4}};
-//    private static final int[][] goalState = {{1,2,3}, {8,0,4}, {7,6,5}};
-
-//    16 Moves
-//    private static final int[][] initialState = {{2,3,1}, {8,0,4}, {7,6,5}};
-//    private static final int[][] goalState = {{1,2,3}, {8,0,4}, {7,6,5}};
-
-//    28 Moves
-//    private static final int[][] initialState = {{8,7,6}, {1,0,5}, {2,3,4}};
-//    private static final int[][] goalState = {{1,2,3}, {8,0,4}, {7,6,5}};
-
     //    31 Moves
     private static final int[][] initialState = {{8, 6, 7}, {2, 5, 4}, {3, 0, 1}};
     private static final int[][] goalState = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
@@ -333,6 +313,29 @@ public class Main {
         }
         return inversionCounter % 2 == 0;
     }
+
+    /***
+     * Pick random start state method
+     * Used for picking any random state provided in the list
+     * @return
+     * Returns a random state
+     */
+    private static int[][] pickRandomStartState() {
+        List<int[][]> listOfStates = new ArrayList<>();
+        listOfStates.add(new int[][]{{1, 2, 3}, {0, 4, 6}, {7, 5, 8}});
+        listOfStates.add(new int[][]{{1, 2, 3}, {8, 0, 4}, {7, 6, 5}});
+        listOfStates.add(new int[][]{{2, 3, 1}, {7, 0, 8}, {6, 5, 4}});
+        listOfStates.add(new int[][]{{2, 3, 1}, {8, 0, 4}, {7, 6, 5}});
+        listOfStates.add(new int[][]{{8, 7, 6}, {1, 0, 5}, {2, 3, 4}});
+        listOfStates.add(new int[][]{{8, 6, 7}, {2, 5, 4}, {3, 0, 1}});
+
+        Random rand = new Random();
+        int rNum = rand.nextInt((listOfStates.size()) + 1);
+
+        return listOfStates.get(rNum);
+
+    }
+
 
     private static class State {
         private int[][] grid;
