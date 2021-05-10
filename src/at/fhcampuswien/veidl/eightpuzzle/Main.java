@@ -3,18 +3,14 @@ package at.fhcampuswien.veidl.eightpuzzle;
 import java.util.*;
 
 public class Main {
+    // best heuristic first
     private static final PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparing(State::getF));
     private static final ArrayList<State> visitedNodes = new ArrayList<>();
 
-//    3 Moves
-private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
+    // 3 Moves
+    private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
     private static final int[][] goalState = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
 
-    /***
-     * Main method
-     * Checks if the given initial state is solvable
-     * Used for starting the search with different heuristics and max iterations
-     */
     public static void main(String[] args) {
         if (!isSolvable(initialState)) {
             throw new IllegalArgumentException("Not solvable");
@@ -22,7 +18,7 @@ private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
 
         queue.add(new State(initialState, 0, 0));
         System.out.println("Search with Manhattan Distance");
-        search(0, 30000);
+        search(0, 20000);
 
         queue.clear();
         queue.add(new State(initialState, 0, 0));
@@ -32,7 +28,7 @@ private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
         queue.clear();
         queue.add(new State(initialState, 0, 0));
         System.out.println("Search with Weighted Heuristic");
-        search(2, 30000);
+        search(2, 10000);
     }
 
     /***
@@ -55,6 +51,7 @@ private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
      * Number of iteration the search should proceed
      */
     private static void search(int searchAlgorithm, int maxIteration) {
+        // to avoid high runtimes for bad heuristics
         int iteration = 0;
         int nodesGenerated = 0;
         visitedNodes.clear();
@@ -62,8 +59,11 @@ private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
         long startTime = System.nanoTime();
         while (iteration <= maxIteration) {
             ArrayList<State> childNodes;
+            // get first node in queue
             State topOfNodes = queue.poll();
+            // when taking out from queue, the node has been touched
             visitedNodes.add(topOfNodes);
+            // compare grids of current node and goal
             if (Arrays.deepEquals(topOfNodes.grid, goalState)) {
                 System.out.println("Execution took: " + (System.nanoTime() - startTime) / 1000000 + "ms");
                 System.out.println("Visited Notes: " + (visitedNodes.size() - 1));
@@ -73,8 +73,10 @@ private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
                 printNode(topOfNodes);
                 break;
             } else {
+                // generate possible childs
                 childNodes = childNodes(topOfNodes, searchAlgorithm);
                 for (State child : childNodes) {
+                    // check if child has been visited before
                     if (!containsInChild(child)) {
                         nodesGenerated++;
                         queue.add(child);
