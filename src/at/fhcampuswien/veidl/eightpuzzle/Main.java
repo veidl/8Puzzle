@@ -6,8 +6,8 @@ public class Main {
     private static final PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparing(State::getF));
     private static final ArrayList<State> visitedNodes = new ArrayList<>();
 
-    //    31 Moves
-    private static final int[][] initialState = {{8, 6, 7}, {2, 5, 4}, {3, 0, 1}};
+//    3 Moves
+private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
     private static final int[][] goalState = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
 
     /***
@@ -39,7 +39,10 @@ public class Main {
      * Search method
      * Used for executing the search with a given algorithm and max iterations
      * In order to measure the run time of the search, a timer starts before entering the loop
-     * Every node positioned at the peek of the queue is a visited node. Visited nodes are those which have the smallest f(n) with f(n) = g(n) + h(n)
+     * Every node positioned at the peek of the queue is a visited node. The priority queue is used to sort all nodes by using a custom comparator.
+     * The comparator uses f(n) with f(n) = g(n) + h(n) to determine the position of the node in the queue. A smaller f(n) dictates a higher priority in the queue. Using the
+     * poll() function provided by the queue we can take out the element with the highest priority.
+     * Visited nodes are those which have the smallest f(n).
      * Expanded nodes on the other hand are those who are opened but then dismissed since f(n) wasn't low enough to pursue
      * The branching factor is calculated by using the expanded nodes and visited nodes and gives us a number between 1-4, stating how many nodes expanded
      * on average during one iteration
