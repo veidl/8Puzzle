@@ -7,28 +7,11 @@ public class Main {
     private static final PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparing(State::getF));
     private static final ArrayList<State> visitedNodes = new ArrayList<>();
 
-    // 3 Moves
-    private static final int[][] initialState = {{1, 2, 3}, {0, 4, 6}, {7, 5, 8}};
     private static final int[][] goalState = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
 
     public static void main(String[] args) {
-        if (!isSolvable(initialState)) {
-            throw new IllegalArgumentException("Not solvable");
-        }
-
-        queue.add(new State(initialState, 0, 0));
-        System.out.println("Search with Manhattan Distance");
-        search(0, 20000);
-
-        queue.clear();
-        queue.add(new State(initialState, 0, 0));
-        System.out.println("Search with Misplaced Tiles");
-        search(1, 30000);
-
-        queue.clear();
-        queue.add(new State(initialState, 0, 0));
-        System.out.println("Search with Weighted Heuristic");
-        search(2, 10000);
+        System.out.println("Generating random start state... Done!");
+        handleInput();
     }
 
     /***
@@ -50,11 +33,22 @@ public class Main {
      * @param maxIteration
      * Number of iteration the search should proceed
      */
-    private static void search(int searchAlgorithm, int maxIteration) {
+    private static void search(int[][] input, int searchAlgorithm, int maxIteration) {
         // to avoid high runtimes for bad heuristics
         int iteration = 0;
         int nodesGenerated = 0;
         visitedNodes.clear();
+        State e = new State(input, 0, 0);
+        queue.add(e);
+
+        System.out.println("Generated Puzzle:");
+        printNode(e);
+
+        if (!isSolvable(input)) {
+            System.out.println("This puzzle is not solvable:");
+            printNode(e);
+            return;
+        }
 
         long startTime = System.nanoTime();
         while (iteration <= maxIteration) {
@@ -304,8 +298,8 @@ public class Main {
         int inversionCounter = 0;
         List<Integer> invList = new ArrayList<>();
 
-        for (int i = 0; i < initialState.length; i++) {
-            for (int j = 0; j < initialState.length; j++) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
                 invList.add(grid[i][j]);
             }
         }
@@ -319,28 +313,65 @@ public class Main {
         return inversionCounter % 2 == 0;
     }
 
-    /***
-     * Pick random start state method
-     * Used for picking any random state provided in the list
+    /**
+     * shuffles 2D array
+     * https://stackoverflow.com/questions/20190110/2d-int-array-shuffle
+     * @param a
      * @return
-     * Returns a random state
      */
-    private static int[][] pickRandomStartState() {
-        List<int[][]> listOfStates = new ArrayList<>();
-        listOfStates.add(new int[][]{{1, 2, 3}, {0, 4, 6}, {7, 5, 8}});
-        listOfStates.add(new int[][]{{1, 2, 3}, {8, 0, 4}, {7, 6, 5}});
-        listOfStates.add(new int[][]{{2, 3, 1}, {7, 0, 8}, {6, 5, 4}});
-        listOfStates.add(new int[][]{{2, 3, 1}, {8, 0, 4}, {7, 6, 5}});
-        listOfStates.add(new int[][]{{8, 7, 6}, {1, 0, 5}, {2, 3, 4}});
-        listOfStates.add(new int[][]{{8, 6, 7}, {2, 5, 4}, {3, 0, 1}});
+    static int[][] shuffle(int[][] a) {
+        Random random = new Random();
 
-        Random rand = new Random();
-        int rNum = rand.nextInt((listOfStates.size()) + 1);
+        for (int i = a.length - 1; i > 0; i--) {
+            for (int j = a[i].length - 1; j > 0; j--) {
+                int m = random.nextInt(i + 1);
+                int n = random.nextInt(j + 1);
 
-        return listOfStates.get(rNum);
-
+                int temp = a[i][j];
+                a[i][j] = a[m][n];
+                a[m][n] = temp;
+            }
+        }
+        return a;
     }
 
+    private static void handleInput() {
+        int[][] randomStartState = shuffle(copyGrid(goalState));
+        while (true) {
+            System.out.println("######## 8 - Puzzle Solver Menu ########");
+            System.out.println("0 ... Search with Manhatten");
+            System.out.println("1 ... Search with Euklidian");
+            System.out.println("2 ... Search with Weighted");
+            System.out.println("3 ... create new Puzzle");
+            System.out.println("########################################");
+
+            Scanner scanner = new Scanner(System.in);
+
+            try {
+                int i = scanner.nextInt();
+
+                switch (i) {
+                    case 0:
+                        search(randomStartState, 0, 20000);
+                        break;
+                    case 1:
+                        search(randomStartState, 1, 30000);
+                        break;
+                    case 2:
+                        search(randomStartState, 2, 20000);
+                        break;
+                    case 3:
+                        randomStartState = shuffle(copyGrid(goalState));
+                        System.out.println("Generation of new random state is done. Enter a Search algorithm");
+                        break;
+                    default:
+                        // try again
+                }
+            } catch (Exception e) {
+                System.out.println("Please provide a valid input.\n");
+            }
+        }
+    }
 
     private static class State {
         private int[][] grid;
