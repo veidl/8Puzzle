@@ -39,13 +39,15 @@ public class Main {
         State e = new State(input, 0, 0);
         queue.add(e);
 
-        System.out.println("Generated Puzzle:");
+        System.out.println("Puzzle to solve:");
         printNode(e);
 
         if (isNotSolvable(input)) {
             System.out.println("This puzzle is not solvable:");
             printNode(e);
             return;
+        } else {
+            System.out.println("Puzzle is solvable.. continuing..");
         }
 
         long startTime = System.nanoTime();
