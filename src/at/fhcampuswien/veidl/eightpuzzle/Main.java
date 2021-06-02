@@ -30,12 +30,10 @@ public class Main {
      * 0 ... Manhattan Distance
      * 1 ... Misplaced Tiles
      * 2 ... Weighted Combination of both
-     * @param maxIteration
      * Number of iteration the search should proceed
      */
-    private static void search(int[][] input, int searchAlgorithm, int maxIteration) {
+    private static void search(int[][] input, int searchAlgorithm) {
         // to avoid high runtimes for bad heuristics
-        int iteration = 0;
         int nodesGenerated = 0;
         visitedNodes.clear();
         State e = new State(input, 0, 0);
@@ -44,14 +42,14 @@ public class Main {
         System.out.println("Generated Puzzle:");
         printNode(e);
 
-        if (!isSolvable(input)) {
+        if (isNotSolvable(input)) {
             System.out.println("This puzzle is not solvable:");
             printNode(e);
             return;
         }
 
         long startTime = System.nanoTime();
-        while (iteration <= maxIteration) {
+        while (true) {
             ArrayList<State> childNodes;
             // get first node in queue
             State topOfNodes = queue.poll();
@@ -60,6 +58,7 @@ public class Main {
             // compare grids of current node and goal
             if (Arrays.deepEquals(topOfNodes.grid, goalState)) {
                 System.out.println("Execution took: " + (System.nanoTime() - startTime) / 1000000 + "ms");
+                calculateMemory();
                 System.out.println("Visited Notes: " + (visitedNodes.size() - 1));
                 System.out.println("Nodes Generated: " + (nodesGenerated));
                 System.out.println("Branching Factor: " + ((((double) nodesGenerated) / (double) (visitedNodes.size() - 1))));
@@ -77,7 +76,7 @@ public class Main {
                     }
                 }
             }
-            iteration++;
+
         }
     }
 
@@ -280,6 +279,9 @@ public class Main {
 
     /***
      * Is solvable method
+     *
+     * https://www.geeksforgeeks.org/check-instance-8-puzzle-solvable/
+     *
      * Used for calculating the number of inversions of the given grid
      * If the number of inversions is odd, the grid is not solvable
      * If the number of inversion is even, the grid is solvable
@@ -291,31 +293,24 @@ public class Main {
      * The number 5 is positioned at 6, the number of inversions is 1
      * @param grid
      * Given grid for which the inversions are calculated
-     * @return
-     * Sum of all inversions
+     * @return whether its solvable or not
      */
-    private static boolean isSolvable(int[][] grid) {
+    private static boolean isNotSolvable(int[][] grid) {
         int inversionCounter = 0;
-        List<Integer> invList = new ArrayList<>();
 
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                invList.add(grid[i][j]);
-            }
-        }
-        for (int i = 0; i < invList.size(); i++) {
-            for (Integer integer : invList) {
-                if (invList.get(i) > 0 && integer > 0 && invList.get(i) > integer) {
+        for (int i = 0; i < 3 - 1; i++)
+            for (int j = i + 1; j < 3; j++)
+                if (grid[j][i] > 0 &&
+                        grid[j][i] > grid[i][j])
                     inversionCounter++;
-                }
-            }
-        }
+
         return inversionCounter % 2 == 0;
     }
 
     /**
      * shuffles 2D array
      * https://stackoverflow.com/questions/20190110/2d-int-array-shuffle
+     *
      * @param a
      * @return
      */
@@ -335,6 +330,9 @@ public class Main {
         return a;
     }
 
+    /**
+     * handles user interaction
+     */
     private static void handleInput() {
         int[][] randomStartState = shuffle(copyGrid(goalState));
         while (true) {
@@ -342,7 +340,8 @@ public class Main {
             System.out.println("0 ... Search with Manhatten");
             System.out.println("1 ... Search with Euklidian");
             System.out.println("2 ... Search with Weighted");
-            System.out.println("3 ... create new Puzzle");
+            System.out.println("3 ... generate random new Puzzle");
+            System.out.println("4 ... enter custom puzzle");
             System.out.println("########################################");
 
             Scanner scanner = new Scanner(System.in);
@@ -352,18 +351,20 @@ public class Main {
 
                 switch (i) {
                     case 0:
-                        search(randomStartState, 0, 20000);
+                        search(randomStartState, 0);
                         break;
                     case 1:
-                        search(randomStartState, 1, 30000);
+                        search(randomStartState, 1);
                         break;
                     case 2:
-                        search(randomStartState, 2, 20000);
+                        search(randomStartState, 2);
                         break;
                     case 3:
                         randomStartState = shuffle(copyGrid(goalState));
                         System.out.println("Generation of new random state is done. Enter a Search algorithm");
                         break;
+                    case 4:
+                        randomStartState = handleCustomInput();
                     default:
                         // try again
                 }
@@ -371,6 +372,47 @@ public class Main {
                 System.out.println("Please provide a valid input.\n");
             }
         }
+    }
+
+    /**
+     * Define your custom puzzle
+     * @return custom 8-puzzle
+     */
+    private static int[][] handleCustomInput() {
+        System.out.println("Enter new Puzzle like: '012345678'");
+        Scanner scanner = new Scanner(System.in);
+
+        String s = scanner.nextLine();
+
+        int[][] temp = new int[3][3];
+
+
+        if (s.length() == 9) {
+            String[] split = s.split("");
+
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    // find the appropriate index for a 3x3 puzzle
+                    temp[i][j] = Integer.parseInt(split[3 * i + j]);
+                }
+            }
+        } else {
+            System.out.println("You have to enter 9 values only.");
+        }
+
+        printNode(new State(temp, 0, 0));
+
+        return temp;
+    }
+
+    private static void calculateMemory() {
+        Runtime rt = Runtime.getRuntime();
+
+        rt.gc();
+        long memory = rt.totalMemory() - rt.freeMemory();
+
+        System.out.println("Used memory in bytes: " + memory);
+        System.out.println("Used memory in Megabytes: " + memory / (1024L * 1024L));
     }
 
     private static class State {
